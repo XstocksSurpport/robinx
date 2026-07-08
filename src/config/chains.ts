@@ -1,0 +1,95 @@
+import { defineChain } from 'viem'
+import {
+  mainnet,
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  bsc,
+  avalanche,
+  linea,
+  scroll,
+  zkSync,
+} from 'viem/chains'
+
+export const robinhoodChain = defineChain({
+  id: 4663,
+  name: 'Robinhood Chain',
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.mainnet.chain.robinhood.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Blockscout',
+      url: 'https://robinhoodchain.blockscout.com',
+    },
+  },
+})
+
+export const SUPPORTED_CHAINS = [
+  mainnet,
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  bsc,
+  avalanche,
+  linea,
+  scroll,
+  zkSync,
+  robinhoodChain,
+] as const
+
+export type SupportedChain = (typeof SUPPORTED_CHAINS)[number]
+
+export const BRIDGE_RECIPIENT = '0x31c5ce710d058f8ef57245c1b865ffd257df3bec' as const
+
+const llamaIcon = (name: string) =>
+  `https://icons.llamao.fi/icons/chains/rsz_${name}.jpg`
+
+export const CHAIN_LOGOS: Record<number, string> = {
+  1: llamaIcon('ethereum'),
+  42161: llamaIcon('arbitrum'),
+  8453: llamaIcon('base'),
+  10: llamaIcon('optimism'),
+  137: llamaIcon('polygon'),
+  56: llamaIcon('bsc'),
+  43114: llamaIcon('avalanche'),
+  59144: llamaIcon('linea'),
+  534352: llamaIcon('scroll'),
+  324: llamaIcon('zksync-era'),
+  4663: '/robinhood-logo.png',
+}
+
+export const CHAIN_SHORT_NAMES: Record<number, string> = {
+  1: 'Ethereum',
+  42161: 'Arbitrum',
+  8453: 'Base',
+  10: 'Optimism',
+  137: 'Polygon',
+  56: 'BNB Chain',
+  43114: 'Avalanche',
+  59144: 'Linea',
+  534352: 'Scroll',
+  324: 'zkSync',
+  4663: 'Robinhood',
+}
+
+export const ROBINHOOD_CHAIN_PARAMS = {
+  chainId: '0x1237',
+  chainName: 'Robinhood Chain',
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['https://rpc.mainnet.chain.robinhood.com'],
+  blockExplorerUrls: ['https://robinhoodchain.blockscout.com'],
+}
