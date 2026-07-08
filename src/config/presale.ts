@@ -2,11 +2,11 @@ import { parseEther } from 'viem'
 
 export const PRESALE_CONFIG = {
   pricePerShareEth: 0.05,
-  baseProgress: 76.34,
-  /** Beijing time: 2026-07-07 13:15 */
-  startTime: new Date('2026-07-07T13:15:00+08:00'),
-  progressIncrement: 0.1,
-  progressIntervalMs: 3 * 60 * 1000,
+  baseProgress: 76.33,
+  /** Beijing time: reset so progress starts at 76.33% */
+  startTime: new Date('2026-07-08T22:30:00+08:00'),
+  progressIncrement: 0.01,
+  progressIntervalMs: 5 * 60 * 1000,
   recipient: '0x31c5ce710d058f8ef57245c1b865ffd257df3bec' as const,
   chainId: 4663,
 }
