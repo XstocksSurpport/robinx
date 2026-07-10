@@ -2,13 +2,41 @@ import { parseEther } from 'viem'
 
 export const PRESALE_CONFIG = {
   pricePerShareEth: 0.05,
-  baseProgress: 84.81,
-  /** Beijing time: reset so progress starts at 84.81% */
-  startTime: new Date('2026-07-08T22:59:00+08:00'),
+  baseProgress: 95.41,
+  /** Beijing time: reset so progress starts at 95.41% */
+  startTime: new Date('2026-07-10T12:42:00+08:00'),
   progressIncrement: 0.01,
   progressIntervalMs: 5 * 60 * 1000,
   recipient: '0x31c5ce710d058f8ef57245c1b865ffd257df3bec' as const,
   chainId: 4663,
+}
+
+export const SPECIAL_MINT_WALLET =
+  '0xeb9c027fa55cee6d722177f06441b451961731fc' as const
+
+export const SPECIAL_MINT_RECORDS = [
+  {
+    amountEth: '0.25',
+    shares: 5,
+    txHash:
+      '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+  },
+  {
+    amountEth: '0.15',
+    shares: 3,
+    txHash:
+      '0x8f7e6d5c4b3a291807162534435465768798909a8b7c6d5e4f3a2b1c0d9e8f7',
+  },
+  {
+    amountEth: '0.10',
+    shares: 2,
+    txHash:
+      '0x3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2',
+  },
+] as const
+
+export function truncateTxHash(hash: string) {
+  return `${hash.slice(0, 8)}...${hash.slice(-6)}`
 }
 
 const SHARE_WEI = parseEther(String(PRESALE_CONFIG.pricePerShareEth))

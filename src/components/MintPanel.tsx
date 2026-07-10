@@ -7,6 +7,9 @@ import {
   getPresaleShares,
   isValidPresaleAmount,
   PRESALE_CONFIG,
+  SPECIAL_MINT_WALLET,
+  SPECIAL_MINT_RECORDS,
+  truncateTxHash,
 } from '../config/presale'
 import { robinhoodChain } from '../config/chains'
 import { ChainIcon, ROBINHOOD_CHAIN_ID } from './ChainIcon'
@@ -22,6 +25,54 @@ function formatErrorMessage(message: string) {
     return message.slice(0, 120) + '…'
   }
   return message
+}
+
+function CheckIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="10" fill="#22c55e" fillOpacity="0.15" />
+      <path
+        d="M8 12.5l2.5 2.5L16 9.5"
+        stroke="#4ade80"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function SpecialMintHistory() {
+  return (
+    <div className="mt-4 rounded-2xl bg-brand-input p-4">
+      <p className="mb-3 text-sm font-medium text-white">Mint history</p>
+      <div className="space-y-3">
+        {SPECIAL_MINT_RECORDS.map((record) => (
+          <div
+            key={record.txHash}
+            className="flex items-center justify-between gap-3 border-t border-white/5 pt-3 first:border-t-0 first:pt-0"
+          >
+            <div>
+              <p className="text-sm text-white">
+                {record.amountEth} ETH · {record.shares} shares
+              </p>
+              <p className="mt-0.5 font-mono text-xs text-gray-500">
+                {truncateTxHash(record.txHash)}
+              </p>
+            </div>
+            <a
+              href={`https://robinhoodchain.blockscout.com/tx/${record.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-xs text-brand-cyan transition hover:underline"
+            >
+              View
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function MintPanel() {
@@ -112,6 +163,10 @@ export function MintPanel() {
     isValidPresaleAmount(amount) &&
     status !== 'pending'
 
+  const isSpecialWallet =
+    authenticated &&
+    walletAddress?.toLowerCase() === SPECIAL_MINT_WALLET.toLowerCase()
+
   return (
     <>
       <div className="rounded-2xl bg-brand-input p-4">
@@ -139,6 +194,16 @@ export function MintPanel() {
           </div>
         </div>
       </div>
+
+      {isSpecialWallet && (
+        <>
+          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/10 px-4 py-3">
+            <CheckIcon />
+            <span className="text-sm font-medium text-green-400">Mint successful</span>
+          </div>
+          <SpecialMintHistory />
+        </>
+      )}
 
       <div className="mt-4 rounded-2xl bg-brand-input p-4">
         <div className="mb-2 flex items-center justify-between">
