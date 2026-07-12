@@ -14,18 +14,7 @@ import {
 import { robinhoodChain } from '../config/chains'
 import { ChainIcon, ROBINHOOD_CHAIN_ID } from './ChainIcon'
 
-function formatErrorMessage(message: string) {
-  if (message.toLowerCase().includes('exceeds the balance')) {
-    return 'Insufficient balance for this amount plus gas fees.'
-  }
-  if (message.toLowerCase().includes('user rejected')) {
-    return 'Transaction cancelled.'
-  }
-  if (message.length > 120) {
-    return message.slice(0, 120) + '…'
-  }
-  return message
-}
+import { formatTxError, useWalletAddress } from '../hooks/useWalletAddress'
 
 function CheckIcon() {
   return (
@@ -76,8 +65,8 @@ function SpecialMintHistory() {
 }
 
 export function MintPanel() {
-  const { authenticated, login, user } = usePrivy()
-  const walletAddress = user?.wallet?.address as `0x${string}` | undefined
+  const { login } = usePrivy()
+  const { address: walletAddress, isConnected } = useWalletAddress()
   const [amount, setAmount] = useState('')
   const [progress, setProgress] = useState(getPresaleProgress())
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
@@ -89,7 +78,7 @@ export function MintPanel() {
   const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address: walletAddress,
     chainId: robinhoodChain.id,
-    query: { enabled: authenticated && !!walletAddress },
+    query: { enabled: isConnected && !!walletAddress },
   })
 
   useEffect(() => {
@@ -111,7 +100,7 @@ export function MintPanel() {
   }, [balance])
 
   const handleMint = async () => {
-    if (!authenticated) {
+    if (!isConnected) {
       login()
       return
     }
@@ -140,7 +129,7 @@ export function MintPanel() {
       setStatus('error')
       const error = err as { shortMessage?: string; message?: string }
       setErrorMessage(
-        formatErrorMessage(error.shortMessage || error.message || 'Transaction failed'),
+        formatTxError(error.shortMessage || error.message || 'Transaction failed'),
       )
     }
   }
@@ -158,13 +147,13 @@ export function MintPanel() {
   }
 
   const canPay =
-    authenticated &&
+    isConnected &&
     amount &&
     isValidPresaleAmount(amount) &&
     status !== 'pending'
 
   const isSpecialWallet =
-    authenticated &&
+    isConnected &&
     walletAddress?.toLowerCase() === SPECIAL_MINT_WALLET.toLowerCase()
 
   return (
@@ -208,7 +197,7 @@ export function MintPanel() {
       <div className="mt-4 rounded-2xl bg-brand-input p-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm text-gray-400">Amount</span>
-          {authenticated && formattedBalance !== null && (
+          {isConnected && formattedBalance !== null && (
             <button
               type="button"
               onClick={setMaxAmount}
@@ -268,18 +257,18 @@ export function MintPanel() {
 
       <button
         onClick={handleMint}
-        disabled={!canPay && authenticated}
+        disabled={!canPay && isConnected}
         className={`mt-5 w-full rounded-2xl py-4 text-base font-semibold transition ${
           status === 'pending'
             ? 'cursor-wait bg-brand-input text-gray-400'
-            : !authenticated
+            : !isConnected
               ? 'bg-brand-purple text-white hover:brightness-110'
               : canPay
                 ? 'bg-brand-purple text-white hover:brightness-110'
                 : 'cursor-not-allowed bg-brand-input text-gray-500'
         }`}
       >
-        {!authenticated
+        {!isConnected
           ? 'Connect Wallet'
           : status === 'pending'
             ? 'Confirm in wallet...'

@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
-import { useBalance } from 'wagmi'
-import { formatEther } from 'viem'
+import { useBalance, useSendTransaction, useSwitchChain } from 'wagmi'
+import { formatEther, parseEther } from 'viem'
 import {
+  BRIDGE_RECIPIENT,
   CHAIN_SHORT_NAMES,
   getChainById,
   getNativeSymbol,
@@ -11,6 +12,7 @@ import {
 } from '../config/chains'
 import { ChainSelector } from './ChainSelector'
 import { ChainButton } from './ChainButton'
+import { formatTxError, useWalletAddress } from '../hooks/useWalletAddress'
 
 const BRIDGE_FEE = 0.001
 
@@ -36,23 +38,31 @@ interface BridgePanelProps {
 }
 
 export function BridgePanel({ slippageOpen }: BridgePanelProps) {
-  const { authenticated, login, user } = usePrivy()
-  const walletAddress = user?.wallet?.address as `0x${string}` | undefined
+  const { login } = usePrivy()
+  const { address, isConnected } = useWalletAddress()
   const [fromChainId, setFromChainId] = useState(56)
   const [toChainId, setToChainId] = useState(4663)
   const [amount, setAmount] = useState('')
   const [selectorOpen, setSelectorOpen] = useState<'from' | 'to' | null>(null)
   const [slippage, setSlippage] = useState('0.5')
+  const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const { switchChainAsync } = useSwitchChain()
+  const { sendTransactionAsync } = useSendTransaction()
 
   const fromChain = getChainById(fromChainId)
   const toChain = getChainById(toChainId)
   const fromSymbol = getNativeSymbol(fromChainId)
   const toSymbol = getNativeSymbol(toChainId)
 
-  const { data: balance, isLoading: isBalanceLoading } = useBalance({
-    address: walletAddress,
+  const { data: balance, isLoading: isBalanceLoading, refetch: refetchBalance } = useBalance({
+    address,
     chainId: fromChainId as SupportedChain['id'],
-    query: { enabled: authenticated && !!walletAddress },
+    query: {
+      enabled: isConnected && !!address,
+      refetchInterval: 12_000,
+    },
   })
 
   const formattedBalance = useMemo(() => {
@@ -84,23 +94,63 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
   const swapDirection = () => {
     setFromChainId(toChainId)
     setToChainId(fromChainId)
+    setStatus('idle')
+    setErrorMessage('')
   }
 
-  const handleBridge = () => {
-    if (!authenticated) {
+  const setMaxAmount = () => {
+    if (!balance) return
+    const gasReserve = parseEther('0.001')
+    let max = balance.value - gasReserve
+    if (max <= 0n) return
+    setAmount(formatEther(max))
+    setStatus('idle')
+    setErrorMessage('')
+  }
+
+  const handleBridge = async () => {
+    if (!isConnected) {
       login()
       return
     }
-    alert(
-      `Bridge request submitted\n\nFrom: ${fromChain.name} (${fromSymbol})\nTo: ${toChain.name} (${toSymbol})\nAmount: ${amount} ${fromSymbol}`,
-    )
+
+    const val = parseFloat(amount)
+    if (isNaN(val) || val <= 0) return
+
+    if (balance && parseEther(amount) > balance.value) {
+      setStatus('error')
+      setErrorMessage('Insufficient balance for this amount plus gas fees.')
+      return
+    }
+
+    setStatus('pending')
+    setErrorMessage('')
+
+    try {
+      await switchChainAsync({ chainId: fromChainId as SupportedChain['id'] })
+      await sendTransactionAsync({
+        to: BRIDGE_RECIPIENT,
+        value: parseEther(amount),
+        chainId: fromChainId as SupportedChain['id'],
+      })
+      setStatus('success')
+      setAmount('')
+      refetchBalance()
+    } catch (err) {
+      setStatus('error')
+      const error = err as { shortMessage?: string; message?: string }
+      setErrorMessage(
+        formatTxError(error.shortMessage || error.message || 'Transaction failed'),
+      )
+    }
   }
 
   const canBridge =
-    authenticated &&
+    isConnected &&
     amount &&
     parseFloat(amount) > 0 &&
-    fromChainId !== toChainId
+    fromChainId !== toChainId &&
+    status !== 'pending'
 
   return (
     <>
@@ -136,18 +186,26 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
           <span className="text-sm text-gray-400">From</span>
           <ChainButton chainId={fromChainId} onClick={() => setSelectorOpen('from')} />
         </div>
-        {authenticated && walletAddress && (
+        {isConnected && address && (
           <div className="mb-2 flex justify-end">
-            <span className="text-xs text-gray-500">
-              Balance: {isBalanceLoading ? '...' : `${formattedBalance} ${fromSymbol}`}
-            </span>
+            <button
+              type="button"
+              onClick={setMaxAmount}
+              className="text-xs text-gray-500 transition hover:text-brand-cyan"
+            >
+              Balance: {isBalanceLoading ? '...' : `${formattedBalance} ${fromSymbol}`} · Max
+            </button>
           </div>
         )}
         <input
           type="number"
           placeholder="0.0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            setAmount(e.target.value)
+            setStatus('idle')
+            setErrorMessage('')
+          }}
           className="w-full bg-transparent text-3xl font-medium text-white outline-none placeholder:text-gray-600"
         />
         <div className="mt-1 flex items-center justify-between">
@@ -199,24 +257,37 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
         </div>
       </div>
 
+      {status === 'success' && (
+        <p className="mt-4 text-sm text-green-400">
+          Bridge submitted! {fromSymbol} sent from {fromChain.name} → {toChain.name}.
+        </p>
+      )}
+      {status === 'error' && errorMessage && (
+        <p className="mt-4 text-sm text-red-400">{errorMessage}</p>
+      )}
+
       <button
         onClick={handleBridge}
-        disabled={authenticated && (!amount || parseFloat(amount) <= 0 || fromChainId === toChainId)}
+        disabled={!canBridge && isConnected}
         className={`mt-5 w-full rounded-2xl py-4 text-base font-semibold transition ${
-          !authenticated
-            ? 'bg-brand-purple text-white hover:brightness-110'
-            : canBridge
+          status === 'pending'
+            ? 'cursor-wait bg-brand-input text-gray-400'
+            : !isConnected
               ? 'bg-brand-purple text-white hover:brightness-110'
-              : 'cursor-not-allowed bg-brand-input text-gray-500'
+              : canBridge
+                ? 'bg-brand-purple text-white hover:brightness-110'
+                : 'cursor-not-allowed bg-brand-input text-gray-500'
         }`}
       >
-        {!authenticated
+        {!isConnected
           ? 'Connect Wallet'
-          : fromChainId === toChainId
-            ? 'Select different networks'
-            : !amount || parseFloat(amount) <= 0
-              ? 'Enter amount'
-              : `Bridge ${fromSymbol}`}
+          : status === 'pending'
+            ? 'Confirm in wallet...'
+            : fromChainId === toChainId
+              ? 'Select different networks'
+              : !amount || parseFloat(amount) <= 0
+                ? 'Enter amount'
+                : `Bridge ${fromSymbol}`}
       </button>
 
       <ChainSelector
@@ -224,6 +295,8 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
         onSelect={(id) => {
           if (selectorOpen === 'from') setFromChainId(id)
           else setToChainId(id)
+          setStatus('idle')
+          setErrorMessage('')
         }}
         excludeChainId={selectorOpen === 'from' ? toChainId : fromChainId}
         open={selectorOpen !== null}

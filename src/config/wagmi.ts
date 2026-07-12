@@ -17,17 +17,17 @@ import { robinhoodChain, SUPPORTED_CHAINS } from './chains'
 export const wagmiConfig = createConfig({
   chains: [...SUPPORTED_CHAINS],
   transports: {
-    [mainnet.id]: http(),
-    [arbitrum.id]: http(),
-    [base.id]: http(),
-    [optimism.id]: http(),
-    [polygon.id]: http(),
-    [bsc.id]: http(),
-    [avalanche.id]: http(),
-    [linea.id]: http(),
-    [scroll.id]: http(),
-    [zkSync.id]: http(),
-    [robinhoodChain.id]: http(),
+    [mainnet.id]: http('https://ethereum.publicnode.com'),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
+    [base.id]: http('https://mainnet.base.org'),
+    [optimism.id]: http('https://mainnet.optimism.io'),
+    [polygon.id]: http('https://polygon-rpc.com'),
+    [bsc.id]: http('https://bsc-dataseed.binance.org'),
+    [avalanche.id]: http('https://api.avax.network/ext/bc/C/rpc'),
+    [linea.id]: http('https://rpc.linea.build'),
+    [scroll.id]: http('https://rpc.scroll.io'),
+    [zkSync.id]: http('https://mainnet.era.zksync.io'),
+    [robinhoodChain.id]: http('https://rpc.mainnet.chain.robinhood.com'),
   },
 })
 
