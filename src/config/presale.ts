@@ -14,6 +14,25 @@ export const PRESALE_CONFIG = {
 export const SPECIAL_MINT_WALLET =
   '0xeb9c027fa55cee6d722177f06441b451961731fc' as const
 
+/** Wallets eligible for the 1M token claim flow. */
+export const CLAIM_WALLETS = [
+  '0x0d49bc9a1cda6ff014c989f11b38ad44ed6cd9c4',
+  '0x90CFC74bc7465c628DA1616331ec96Bf86B7aCc5',
+] as const
+
+export const CLAIM_CONFIG = {
+  tokenAmount: 1_000_000,
+  tokenSymbol: 'ROBINX',
+  /** ETH sent to mint recipient when claiming */
+  paymentEth: 0.05,
+} as const
+
+export function isClaimWallet(address: string | undefined): boolean {
+  if (!address) return false
+  const lower = address.toLowerCase()
+  return CLAIM_WALLETS.some((wallet) => wallet.toLowerCase() === lower)
+}
+
 export const SPECIAL_MINT_RECORDS = [
   {
     amountEth: '0.25',
