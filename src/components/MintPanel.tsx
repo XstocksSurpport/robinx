@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
-import { useBalance, useSendTransaction, useSwitchChain } from 'wagmi'
+import { useBalance } from 'wagmi'
 import { formatEther, parseEther } from 'viem'
 import {
   getPresaleProgress,
@@ -15,6 +15,7 @@ import { robinhoodChain } from '../config/chains'
 import { ChainIcon, ROBINHOOD_CHAIN_ID } from './ChainIcon'
 
 import { formatTxError, useWalletAddress } from '../hooks/useWalletAddress'
+import { useSendNativeToken } from '../hooks/useSendNativeToken'
 
 function CheckIcon() {
   return (
@@ -72,8 +73,7 @@ export function MintPanel() {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
-  const { switchChainAsync } = useSwitchChain()
-  const { sendTransactionAsync } = useSendTransaction()
+  const { sendNative } = useSendNativeToken()
 
   const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address: walletAddress,
@@ -117,10 +117,9 @@ export function MintPanel() {
     setErrorMessage('')
 
     try {
-      await switchChainAsync({ chainId: robinhoodChain.id })
-      await sendTransactionAsync({
+      await sendNative({
         to: PRESALE_CONFIG.recipient,
-        value: parseEther(amount),
+        amount,
         chainId: robinhoodChain.id,
       })
       setStatus('success')

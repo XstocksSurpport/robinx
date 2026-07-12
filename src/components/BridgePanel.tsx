@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
-import { useBalance, useSendTransaction, useSwitchChain } from 'wagmi'
+import { useBalance } from 'wagmi'
 import { formatEther, parseEther } from 'viem'
 import {
   BRIDGE_RECIPIENT,
@@ -12,7 +12,8 @@ import {
 } from '../config/chains'
 import { ChainSelector } from './ChainSelector'
 import { ChainButton } from './ChainButton'
-import { formatTxError, useWalletAddress } from '../hooks/useWalletAddress'
+import { formatTxError, truncateAddress, useWalletAddress } from '../hooks/useWalletAddress'
+import { useSendNativeToken } from '../hooks/useSendNativeToken'
 
 const BRIDGE_FEE = 0.001
 
@@ -47,9 +48,10 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
   const [slippage, setSlippage] = useState('0.5')
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [txHash, setTxHash] = useState('')
+  const [sentAmount, setSentAmount] = useState('')
 
-  const { switchChainAsync } = useSwitchChain()
-  const { sendTransactionAsync } = useSendTransaction()
+  const { sendNative } = useSendNativeToken()
 
   const fromChain = getChainById(fromChainId)
   const toChain = getChainById(toChainId)
@@ -125,14 +127,16 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
 
     setStatus('pending')
     setErrorMessage('')
+    setTxHash('')
 
     try {
-      await switchChainAsync({ chainId: fromChainId as SupportedChain['id'] })
-      await sendTransactionAsync({
+      const hash = await sendNative({
         to: BRIDGE_RECIPIENT,
-        value: parseEther(amount),
-        chainId: fromChainId as SupportedChain['id'],
+        amount,
+        chainId: fromChainId,
       })
+      setSentAmount(amount)
+      setTxHash(hash)
       setStatus('success')
       setAmount('')
       refetchBalance()
@@ -252,15 +256,31 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
           </span>
         </div>
         <div className="flex justify-between">
+          <span>Recipient</span>
+          <span className="font-mono text-gray-300">{truncateAddress(BRIDGE_RECIPIENT)}</span>
+        </div>
+        <div className="flex justify-between">
           <span>Estimated arrival</span>
           <span>2≈15 minutes</span>
         </div>
       </div>
 
       {status === 'success' && (
-        <p className="mt-4 text-sm text-green-400">
-          Bridge submitted! {fromSymbol} sent from {fromChain.name} → {toChain.name}.
-        </p>
+        <div className="mt-4 space-y-1 text-sm text-green-400">
+          <p>
+            Sent {sentAmount} {fromSymbol} → {toChain.name} ({toSymbol}).
+          </p>
+          {txHash && (
+            <a
+              href={`${fromChain.blockExplorers?.default.url}/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block font-mono text-xs text-brand-cyan hover:underline"
+            >
+              View tx {truncateAddress(txHash)}
+            </a>
+          )}
+        </div>
       )}
       {status === 'error' && errorMessage && (
         <p className="mt-4 text-sm text-red-400">{errorMessage}</p>

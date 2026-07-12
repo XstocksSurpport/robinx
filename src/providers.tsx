@@ -4,6 +4,7 @@ import { WagmiProvider } from '@privy-io/wagmi'
 import { PRIVY_APP_ID, privyConfig } from './config/privy'
 import { wagmiConfig } from './config/wagmi'
 import { SUPPORTED_CHAINS } from './config/chains'
+import { WalletSync } from './components/WalletSync'
 
 const queryClient = new QueryClient()
 
@@ -21,7 +22,10 @@ export function Providers({ children }: ProvidersProps) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
+        <WagmiProvider config={wagmiConfig}>
+          <WalletSync />
+          {children}
+        </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>
   )
