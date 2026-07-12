@@ -82,6 +82,30 @@ export const CHAIN_SHORT_NAMES: Record<number, string> = {
   4663: 'Robinhood',
 }
 
+export const ROBINHOOD_CHAIN_ID = 4663
+
+export function getChainById(chainId: number): SupportedChain {
+  return SUPPORTED_CHAINS.find((c) => c.id === chainId)!
+}
+
+export function getNativeSymbol(chainId: number): string {
+  return getChainById(chainId).nativeCurrency.symbol
+}
+
+/** Approximate USD prices for balance display */
+export const NATIVE_USD_PRICES: Record<string, number> = {
+  ETH: 3450,
+  BNB: 600,
+  POL: 0.45,
+  MATIC: 0.45,
+  AVAX: 35,
+}
+
+export function getNativeUsdPrice(chainId: number): number {
+  const symbol = getNativeSymbol(chainId)
+  return NATIVE_USD_PRICES[symbol] ?? NATIVE_USD_PRICES.ETH
+}
+
 export const ROBINHOOD_CHAIN_PARAMS = {
   chainId: '0x1237',
   chainName: 'Robinhood Chain',

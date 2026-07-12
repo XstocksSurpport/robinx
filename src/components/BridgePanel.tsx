@@ -3,18 +3,16 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useBalance } from 'wagmi'
 import { formatEther } from 'viem'
 import {
-  SUPPORTED_CHAINS,
   CHAIN_SHORT_NAMES,
+  getChainById,
+  getNativeSymbol,
+  getNativeUsdPrice,
   type SupportedChain,
 } from '../config/chains'
 import { ChainSelector } from './ChainSelector'
 import { ChainButton } from './ChainButton'
 
-const ETH_PRICE_USD = 3450
-
-function getChainById(id: number) {
-  return SUPPORTED_CHAINS.find((c) => c.id === id)!
-}
+const BRIDGE_FEE = 0.001
 
 function SwapIcon({ onSwap }: { onSwap: () => void }) {
   return (
@@ -40,14 +38,16 @@ interface BridgePanelProps {
 export function BridgePanel({ slippageOpen }: BridgePanelProps) {
   const { authenticated, login, user } = usePrivy()
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined
-  const [fromChainId, setFromChainId] = useState(4663)
-  const [toChainId, setToChainId] = useState(1)
+  const [fromChainId, setFromChainId] = useState(56)
+  const [toChainId, setToChainId] = useState(4663)
   const [amount, setAmount] = useState('')
   const [selectorOpen, setSelectorOpen] = useState<'from' | 'to' | null>(null)
   const [slippage, setSlippage] = useState('0.5')
 
   const fromChain = getChainById(fromChainId)
   const toChain = getChainById(toChainId)
+  const fromSymbol = getNativeSymbol(fromChainId)
+  const toSymbol = getNativeSymbol(toChainId)
 
   const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address: walletAddress,
@@ -66,15 +66,20 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
   const estimatedOutput = useMemo(() => {
     const val = parseFloat(amount)
     if (isNaN(val) || val <= 0) return '0.0'
-    const fee = 0.001
-    return (val - fee > 0 ? val - fee : 0).toFixed(4)
+    return (val - BRIDGE_FEE > 0 ? val - BRIDGE_FEE : 0).toFixed(4)
   }, [amount])
 
-  const usdValue = useMemo(() => {
+  const fromUsdValue = useMemo(() => {
     const val = parseFloat(amount)
     if (isNaN(val) || val <= 0) return '0.00'
-    return (val * ETH_PRICE_USD).toFixed(2)
-  }, [amount])
+    return (val * getNativeUsdPrice(fromChainId)).toFixed(2)
+  }, [amount, fromChainId])
+
+  const toUsdValue = useMemo(() => {
+    const val = parseFloat(estimatedOutput)
+    if (isNaN(val) || val <= 0) return '0.00'
+    return (val * getNativeUsdPrice(toChainId)).toFixed(2)
+  }, [estimatedOutput, toChainId])
 
   const swapDirection = () => {
     setFromChainId(toChainId)
@@ -87,7 +92,7 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
       return
     }
     alert(
-      `Bridge request submitted\n\nFrom: ${fromChain.name}\nTo: ${toChain.name}\nAmount: ${amount} ETH`,
+      `Bridge request submitted\n\nFrom: ${fromChain.name} (${fromSymbol})\nTo: ${toChain.name} (${toSymbol})\nAmount: ${amount} ${fromSymbol}`,
     )
   }
 
@@ -134,7 +139,7 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
         {authenticated && walletAddress && (
           <div className="mb-2 flex justify-end">
             <span className="text-xs text-gray-500">
-              Balance: {isBalanceLoading ? '...' : `${formattedBalance} ETH`}
+              Balance: {isBalanceLoading ? '...' : `${formattedBalance} ${fromSymbol}`}
             </span>
           </div>
         )}
@@ -147,9 +152,9 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
         />
         <div className="mt-1 flex items-center justify-between">
           <span className="text-xs text-gray-500">
-            {CHAIN_SHORT_NAMES[fromChainId]} · ETH
+            {CHAIN_SHORT_NAMES[fromChainId]} · {fromSymbol}
           </span>
-          <span className="text-xs text-gray-500">≈ ${usdValue}</span>
+          <span className="text-xs text-gray-500">≈ ${fromUsdValue}</span>
         </div>
       </div>
 
@@ -169,22 +174,24 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
         />
         <div className="mt-1 flex items-center justify-between">
           <span className="text-xs text-gray-500">
-            {CHAIN_SHORT_NAMES[toChainId]} · ETH
+            {CHAIN_SHORT_NAMES[toChainId]} · {toSymbol}
           </span>
-          <span className="text-xs text-gray-500">
-            ≈ ${(parseFloat(estimatedOutput) * ETH_PRICE_USD).toFixed(2)}
-          </span>
+          <span className="text-xs text-gray-500">≈ ${toUsdValue}</span>
         </div>
       </div>
 
       <div className="mt-4 space-y-1 text-xs text-gray-400">
         <div className="flex justify-between">
-          <span>Rate · 1:1 bridge</span>
-          <span>1 ETH ≈ 1 ETH</span>
+          <span>Rate · native bridge</span>
+          <span>
+            1 {fromSymbol} ≈ 1 {toSymbol}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Bridge fee</span>
-          <span>~0.001 ETH</span>
+          <span>
+            ~{BRIDGE_FEE} {fromSymbol}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Estimated arrival</span>
@@ -209,7 +216,7 @@ export function BridgePanel({ slippageOpen }: BridgePanelProps) {
             ? 'Select different networks'
             : !amount || parseFloat(amount) <= 0
               ? 'Enter amount'
-              : 'Confirm Bridge'}
+              : `Bridge ${fromSymbol}`}
       </button>
 
       <ChainSelector
