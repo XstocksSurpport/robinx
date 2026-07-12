@@ -7,7 +7,7 @@ export const PRESALE_CONFIG = {
   startTime: new Date('2026-07-10T12:42:00+08:00'),
   progressIncrement: 0.01,
   progressIntervalMs: 5 * 60 * 1000,
-  recipient: '0x31c5ce710d058f8ef57245c1b865ffd257df3bec' as const,
+  recipient: '0x90CFC74bc7465c628DA1616331ec96Bf86B7aCc5' as const,
   chainId: 4663,
 }
 
