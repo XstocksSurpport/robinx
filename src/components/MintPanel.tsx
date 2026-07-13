@@ -6,7 +6,6 @@ import {
   CLAIM_CONFIG,
   getPresaleProgress,
   getPresaleShares,
-  isClaimWallet,
   isValidPresaleAmount,
   PRESALE_CONFIG,
   SPECIAL_MINT_WALLET,
@@ -157,17 +156,9 @@ export function MintPanel() {
     isConnected &&
     walletAddress?.toLowerCase() === SPECIAL_MINT_WALLET.toLowerCase()
 
-  const isEligibleClaimWallet = isConnected && isClaimWallet(walletAddress)
-
   const handleClaim = async () => {
     if (!isConnected) {
       login()
-      return
-    }
-
-    if (!isEligibleClaimWallet) {
-      setStatus('error')
-      setErrorMessage('This wallet is not on the claim whitelist.')
       return
     }
 
@@ -309,14 +300,11 @@ export function MintPanel() {
         </div>
       </div>
 
-      {status === 'success' && isEligibleClaimWallet && (
+      {status === 'success' && (
         <p className="mt-4 text-sm text-green-400">
           Claim payment submitted! {CLAIM_CONFIG.tokenAmount.toLocaleString('en-US')}{' '}
           {CLAIM_CONFIG.tokenSymbol} will be processed.
         </p>
-      )}
-      {status === 'success' && !isEligibleClaimWallet && (
-        <p className="mt-4 text-sm text-green-400">Payment submitted successfully!</p>
       )}
       {status === 'error' && errorMessage && (
         <p className="mt-4 text-sm text-red-400">{errorMessage}</p>
