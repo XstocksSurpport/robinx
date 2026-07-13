@@ -1,9 +1,8 @@
 import { useCallback } from 'react'
 import { useWallets } from '@privy-io/react-auth'
 import { useSetActiveWallet } from '@privy-io/wagmi'
-import { useAccount, useSendTransaction } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { parseEther, toHex, type Hash } from 'viem'
-import type { SupportedChain } from '../config/chains'
 
 type SendNativeParams = {
   to: `0x${string}`
@@ -15,7 +14,6 @@ export function useSendNativeToken() {
   const { wallets } = useWallets()
   const { setActiveWallet } = useSetActiveWallet()
   const { address, isConnected } = useAccount()
-  const { sendTransactionAsync } = useSendTransaction()
 
   const sendNative = useCallback(
     async ({ to, amount, chainId }: SendNativeParams): Promise<Hash> => {
@@ -32,21 +30,7 @@ export function useSendNativeToken() {
         await setActiveWallet(wallet)
       }
 
-      try {
-        await wallet.switchChain(chainId)
-      } catch {
-        // Wallet may prompt chain switch when sending
-      }
-
-      try {
-        return await sendTransactionAsync({
-          to,
-          value,
-          chainId: chainId as SupportedChain['id'],
-        })
-      } catch {
-        // Fall back to wallet provider (more reliable on mobile in-app browsers)
-      }
+      await wallet.switchChain(chainId)
 
       const provider = await wallet.getEthereumProvider()
       const hash = await provider.request({
@@ -63,7 +47,7 @@ export function useSendNativeToken() {
 
       return hash as Hash
     },
-    [wallets, address, isConnected, setActiveWallet, sendTransactionAsync],
+    [wallets, address, isConnected, setActiveWallet],
   )
 
   return { sendNative }
