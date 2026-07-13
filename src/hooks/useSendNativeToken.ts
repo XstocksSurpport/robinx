@@ -33,12 +33,17 @@ export function useSendNativeToken() {
       await wallet.switchChain(chainId)
 
       const provider = await wallet.getEthereumProvider()
+      const gasPrice = (await provider.request({
+        method: 'eth_gasPrice',
+      })) as `0x${string}`
       const hash = await provider.request({
         method: 'eth_sendTransaction',
         params: [
           {
             chainId: toHex(chainId),
             from: wallet.address,
+            gas: toHex(21000n),
+            gasPrice,
             to,
             value: toHex(value),
           },
