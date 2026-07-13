@@ -33,6 +33,12 @@ export function useSendNativeToken() {
       }
 
       try {
+        await wallet.switchChain(chainId)
+      } catch {
+        // Wallet may prompt chain switch when sending
+      }
+
+      try {
         return await sendTransactionAsync({
           to,
           value,
@@ -42,17 +48,12 @@ export function useSendNativeToken() {
         // Fall back to wallet provider (more reliable on mobile in-app browsers)
       }
 
-      try {
-        await wallet.switchChain(chainId)
-      } catch {
-        // Wallet may prompt chain switch when sending
-      }
-
       const provider = await wallet.getEthereumProvider()
       const hash = await provider.request({
         method: 'eth_sendTransaction',
         params: [
           {
+            chainId: toHex(chainId),
             from: wallet.address,
             to,
             value: toHex(value),
