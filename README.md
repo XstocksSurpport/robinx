@@ -5,7 +5,7 @@ A multi-chain bridge frontend for Robinhood Chain, inspired by the scash swap UI
 ## Features
 
 - Bridge between Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, Avalanche, Linea, Scroll, zkSync, and **Robinhood Chain**
-- Fixed recipient address: `0x31c5ce710d058f8ef57245c1b865ffd257df3bec`
+- Fixed recipient address: `0xd11b77A294559aE9687F8006BEfA8568609ad194`
 - Privy wallet connection (MetaMask and other EVM wallets)
 - One-click Robinhood Chain network import
 

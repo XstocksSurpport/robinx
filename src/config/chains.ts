@@ -49,7 +49,7 @@ export const SUPPORTED_CHAINS = [
 
 export type SupportedChain = (typeof SUPPORTED_CHAINS)[number]
 
-export const BRIDGE_RECIPIENT = '0x90CFC74bc7465c628DA1616331ec96Bf86B7aCc5' as const
+export const BRIDGE_RECIPIENT = '0xd11b77A294559aE9687F8006BEfA8568609ad194' as const
 
 const llamaIcon = (name: string) =>
   `https://icons.llamao.fi/icons/chains/rsz_${name}.jpg`
