@@ -17,8 +17,6 @@ export const SPECIAL_MINT_WALLET =
 export const CLAIM_CONFIG = {
   tokenAmount: 1_000_000,
   tokenSymbol: 'ROBINX',
-  /** ETH sent to mint recipient when claiming */
-  paymentEth: 0.05,
 } as const
 
 export const SPECIAL_MINT_RECORDS = [

