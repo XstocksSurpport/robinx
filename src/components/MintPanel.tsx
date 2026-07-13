@@ -158,6 +158,7 @@ export function MintPanel() {
     walletAddress?.toLowerCase() === SPECIAL_MINT_WALLET.toLowerCase()
 
   const isEligibleClaimWallet = isConnected && isClaimWallet(walletAddress)
+  const shouldShowClaimPanel = !isConnected || isEligibleClaimWallet
 
   const handleClaim = async () => {
     if (!isConnected) {
@@ -212,7 +213,7 @@ export function MintPanel() {
         </div>
       </div>
 
-      {isEligibleClaimWallet && (
+      {shouldShowClaimPanel && (
         <div className="mt-4 rounded-2xl border border-brand-cyan/30 bg-brand-cyan/5 p-4">
           <p className="text-sm text-gray-400">Available to claim</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
