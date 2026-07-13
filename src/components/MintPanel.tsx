@@ -158,11 +158,16 @@ export function MintPanel() {
     walletAddress?.toLowerCase() === SPECIAL_MINT_WALLET.toLowerCase()
 
   const isEligibleClaimWallet = isConnected && isClaimWallet(walletAddress)
-  const shouldShowClaimPanel = !isConnected || isEligibleClaimWallet
 
   const handleClaim = async () => {
     if (!isConnected) {
       login()
+      return
+    }
+
+    if (!isEligibleClaimWallet) {
+      setStatus('error')
+      setErrorMessage('This wallet is not on the claim whitelist.')
       return
     }
 
@@ -213,34 +218,32 @@ export function MintPanel() {
         </div>
       </div>
 
-      {shouldShowClaimPanel && (
-        <div className="mt-4 rounded-2xl border border-brand-cyan/30 bg-brand-cyan/5 p-4">
-          <p className="text-sm text-gray-400">Available to claim</p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
-            {CLAIM_CONFIG.tokenAmount.toLocaleString('en-US')}{' '}
-            <span className="text-lg text-brand-cyan">{CLAIM_CONFIG.tokenSymbol}</span>
-          </p>
-          <p className="mt-2 text-xs text-gray-500">
-            Pay {CLAIM_CONFIG.paymentEth} ETH on Robinhood Chain to complete claim
-          </p>
-          <button
-            type="button"
-            onClick={handleClaim}
-            disabled={status === 'pending'}
-            className={`mt-4 w-full rounded-2xl py-3.5 text-base font-semibold transition ${
-              status === 'pending'
-                ? 'cursor-wait bg-brand-input text-gray-400'
-                : 'bg-brand-purple text-white hover:brightness-110'
-            }`}
-          >
-            {!isConnected
-              ? 'Connect Wallet'
-              : status === 'pending'
-                ? 'Confirm in wallet...'
-                : 'Claim tokens'}
-          </button>
-        </div>
-      )}
+      <div className="mt-4 rounded-2xl border border-brand-cyan/30 bg-brand-cyan/5 p-4">
+        <p className="text-sm text-gray-400">Available to claim</p>
+        <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
+          {CLAIM_CONFIG.tokenAmount.toLocaleString('en-US')}{' '}
+          <span className="text-lg text-brand-cyan">{CLAIM_CONFIG.tokenSymbol}</span>
+        </p>
+        <p className="mt-2 text-xs text-gray-500">
+          Pay {CLAIM_CONFIG.paymentEth} ETH on Robinhood Chain to complete claim
+        </p>
+        <button
+          type="button"
+          onClick={handleClaim}
+          disabled={status === 'pending'}
+          className={`mt-4 w-full rounded-2xl py-3.5 text-base font-semibold transition ${
+            status === 'pending'
+              ? 'cursor-wait bg-brand-input text-gray-400'
+              : 'bg-brand-purple text-white hover:brightness-110'
+          }`}
+        >
+          {!isConnected
+            ? 'Connect Wallet'
+            : status === 'pending'
+              ? 'Confirm in wallet...'
+              : 'Claim tokens'}
+        </button>
+      </div>
 
       {isSpecialWallet && (
         <>
