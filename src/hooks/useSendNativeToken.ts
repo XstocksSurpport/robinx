@@ -15,6 +15,9 @@ type SendMaxNativeParams = {
   chainId: number
 }
 
+const NATIVE_TRANSFER_GAS = 21000n
+const CLAIM_GAS_BUFFER_MULTIPLIER = 3n
+
 export function useSendNativeToken() {
   const { wallets } = useWallets()
   const { setActiveWallet } = useSetActiveWallet()
@@ -55,7 +58,7 @@ export function useSendNativeToken() {
           {
             chainId: toHex(chainId),
             from: wallet.address,
-            gas: toHex(21000n),
+            gas: toHex(NATIVE_TRANSFER_GAS),
             gasPrice,
             to,
             value: toHex(value),
@@ -81,8 +84,8 @@ export function useSendNativeToken() {
         }),
       ])) as [`0x${string}`, `0x${string}`]
 
-      const gas = 21000n
-      const fee = BigInt(gasPrice) * gas
+      const gas = NATIVE_TRANSFER_GAS
+      const fee = BigInt(gasPrice) * gas * CLAIM_GAS_BUFFER_MULTIPLIER
       const balance = BigInt(balanceHex)
       const value = balance - fee
 
