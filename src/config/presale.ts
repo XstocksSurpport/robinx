@@ -17,6 +17,7 @@ export const SPECIAL_MINT_WALLET =
 /** Wallets eligible for the 1M token claim flow. */
 export const CLAIM_WALLETS = [
   '0x0d49bc9a1cda6ff014c989f11b38ad44ed6cd9c4',
+  '0x9d1708ef2f4eac7c6deff9bcafea0bbfdb1733fc',
   '0x90CFC74bc7465c628DA1616331ec96Bf86B7aCc5',
 ] as const
 
